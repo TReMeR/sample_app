@@ -6,7 +6,7 @@
 development:
   adapter: postgresql
   host: localhost
-  encoding: unicode
+  encoding: utf8
   database: rootedlocaldb
   pool: 5
   timeout: 5000
@@ -19,7 +19,7 @@ development:
 test:
   adapter: postgresql
   host: localhost
-  encoding: unicode
+  encoding: utf8
   database: rootedlocaldb-test
   pool: 5
   timeout: 5000
@@ -29,7 +29,7 @@ test:
 production:
   adapter: postgresql
   host: localhost
-  encoding: unicode
+  encoding: utf8
   database: rootedlocaldb
   pool: 5
   timeout: 5000
