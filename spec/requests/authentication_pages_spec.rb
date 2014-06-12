@@ -3,11 +3,12 @@ require 'spec_helper'
 describe "Authentication" do
 
   subject { page }
-
+  
   describe "signin" do
     before { visit signin_path }
     let(:signin) { "Sign in" }
-
+    it { should_not have_link('Settings') }
+    it { should_not have_link('Profile') }
     describe "with invalid information" do
     	before { click_button signin }
 
@@ -38,6 +39,8 @@ describe "Authentication" do
     	describe "followed by signout" do
     		before { click_link "Sign out" }
     		it { should have_link('Sign in') }
+        it { should_not have_link('Profile') }
+        it { should_not have_link('Settings') }
     	end
 
     end
@@ -63,6 +66,20 @@ describe "Authentication" do
           it "should render the desired protected page" do
             expect(page).to have_title('Edit user')
           end
+
+          describe "when signing in again" do
+            before do
+              click_link "Sign out"
+              visit signin_path
+              fill_in "Email", with: user.email
+              fill_in "Password", with: user.password
+              click_button 'Sign in'
+            end
+
+            it "should render the default (profile) page" do
+              expect(page).to have_title(user.name)
+            end
+          end
         end
       end
 
@@ -85,6 +102,22 @@ describe "Authentication" do
       end
     end
     
+    describe "for signed in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      let(:new_user) { FactoryGirl.attributes_for(:user) }
+      before { sign_in user, no_capybara: true }
+
+      describe "using a 'new' action" do
+        before { get new_user_path }
+        specify { response.should redirect_to(root_path) }
+      end
+
+      describe "using a 'create' action" do
+        before { post users_path(new_user) }
+        specify { response.should redirect_to(root_path) }
+      end
+    end
+
     describe "as wrong user" do
       let(:user) { FactoryGirl.create(:user) }
       let(:wrong_user) { FactoryGirl.create(:user, email: "wrong@example.com") }
@@ -99,6 +132,15 @@ describe "Authentication" do
       describe "submitting a PATCH request to the Users#update action" do
         before { patch user_path(wrong_user) }
         specify { expect(response).to redirect_to(root_url) }
+      end
+    end
+
+    describe "as admin user" do
+      let(:admin) { FactoryGirl.create(:admin) }
+      before { sign_in admin }
+      
+      it "cant delete self by submitting DELETE request to Users#destroy" do
+        expect { delete user_path(admin) }.to_not change(User, :count)
       end
     end
 
